@@ -3,6 +3,7 @@ package com.expencetracker.authservice.exceptions;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -52,7 +53,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler{
         Map<String, String> errors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
+                .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage, (m1, m2) -> m1.equals(m2) ? m1 : (m1 + " & " + m2),
+                        LinkedHashMap<String, String>::new 
+                        ));
 
         errorResponse.setErrors(errors);
 
@@ -146,13 +149,24 @@ public ResponseEntity<Map<String, String>> handleJsonProcessingExceptions(Except
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
 }
 
-@ExceptionHandler
+@ExceptionHandler(UserServiceExceptionHandler.class)
 public ResponseEntity<ErrorResponse> handleUserServiceExceptions(UserServiceExceptionHandler ex){
 	errorResponse.setErrors(null);
 	errorResponse.setMessage(ex.getMessage());
 	errorResponse.setStatus(ex.getHttpStatus().value());
 	errorResponse.setTimestamp(LocalDateTime.now());
 	return ResponseEntity.status(ex.getHttpStatus()).body(errorResponse);
+	
+}
+
+@ExceptionHandler(RefreshTokenExceptionHandler.class)
+public ResponseEntity<ErrorResponse> handleRefreshTokenServiceExceptions(RefreshTokenExceptionHandler ex){
+	errorResponse.setErrors(null);
+	errorResponse.setMessage(ex.getMessage());
+	errorResponse.setStatus(ex.getHttpStatus().value());
+	errorResponse.setTimestamp(LocalDateTime.now());
+	return ResponseEntity.status(ex.getHttpStatus()).body(errorResponse);
+
 }
 
 }

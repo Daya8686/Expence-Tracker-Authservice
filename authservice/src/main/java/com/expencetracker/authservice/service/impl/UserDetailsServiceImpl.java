@@ -14,6 +14,8 @@ import com.expencetracker.authservice.exceptions.UserServiceExceptionHandler;
 import com.expencetracker.authservice.repository.UserInfoRepository;
 import com.expencetracker.authservice.util.CustomUserDetails;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
@@ -21,6 +23,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 	private UserInfoRepository userInfoRepository;
 
 	@Override
+	@Transactional
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		Optional<UserInfo> byUsername = userInfoRepository.findByUsername(username);
 		if (byUsername.isEmpty()) {

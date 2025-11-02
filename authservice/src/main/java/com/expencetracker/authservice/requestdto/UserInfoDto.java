@@ -35,14 +35,14 @@ public class UserInfoDto {
 	
 	
 	@Pattern(
-		    regexp = "^(?=.*[A-Z])(?=.*[!@#$%^&*()_+-=[\\]{}|;':\",./<>?])(?=.*[0-9])[A-Za-z0-9!@#$%^&*()_+-=[\\]{}|;':\",./<>?]{8,}$",
+			regexp = "^(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$",
 		    message = "Password must be at least 8 characters long and contain at least one uppercase letter, one digit, and one special character"
 		)
 	@NotBlank
 	@Size(message = "Password field must not be left empty!", min = 8, max = 255)
 		private String password;
 	@Pattern(
-		    regexp = "^(?=.*[A-Z])(?=.*[!@#$%^&*()_+-=[\\]{}|;':\",./<>?])(?=.*[0-9])[A-Za-z0-9!@#$%^&*()_+-=[\\]{}|;':\",./<>?]{8,}$",
+			regexp = "^(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$",
 		    message = "Confirm Password must be at least 8 characters long and contain at least one uppercase letter, one digit, and one special character"
 		)
 	@NotBlank

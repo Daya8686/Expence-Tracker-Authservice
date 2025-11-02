@@ -19,9 +19,11 @@ import org.springframework.stereotype.Service;
 
 import com.expencetracker.authservice.entities.RefreshToken;
 import com.expencetracker.authservice.entities.UserInfo;
+import com.expencetracker.authservice.exceptions.RefreshTokenExceptionHandler;
 import com.expencetracker.authservice.exceptions.UserServiceExceptionHandler;
 import com.expencetracker.authservice.repository.RefreshTokenRepository;
 import com.expencetracker.authservice.repository.UserInfoRepository;
+import com.expencetracker.authservice.util.UserPrinciple;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -46,6 +48,9 @@ public class RefreshTokenService {
 
 	@Autowired
 	private JWTService jwtService;
+	
+	@Autowired
+	private UserPrinciple userPrinciple;
 
 	@PostConstruct
 	public void init() {
@@ -79,21 +84,35 @@ public class RefreshTokenService {
 
 	}
 
+	@Transactional
+	@Modifying
 	public String refreshAccessToken(String refreshToken) {
 		Optional<RefreshToken> byRefreshToken = refreshTokenRepository.findByRefreshToken(refreshToken);
 		if (byRefreshToken.isEmpty()) {
-			throw new UserServiceExceptionHandler("Invalid refresh token!!", HttpStatus.NOT_ACCEPTABLE);
+			throw new RefreshTokenExceptionHandler("Invalid refresh token!!", HttpStatus.NOT_ACCEPTABLE);
 		}
-		Optional<UserInfo> byUsername = userInfoRepository
-				.findByUsername(byRefreshToken.get().getUserInfo().getUsername());
-		UserDetails userDetails = (UserDetails) byUsername.get();
-		if (validateRefreshToken(refreshToken, userDetails)) {
-			return jwtService.generateToken(byUsername.get().getUsername());
+		  UserInfo userInfo = byRefreshToken.get().getUserInfo();
+		if (validateRefreshToken(refreshToken, userInfo)) {
+			return jwtService.generateToken( byRefreshToken.get().getUserInfo().getUsername());
 		}
 		refreshTokenRepository.delete(byRefreshToken.get());
-		throw new UserServiceExceptionHandler("Refresh token is not valid!!! Please login again!!",
+		throw new RefreshTokenExceptionHandler("Refresh token is not valid!!! Please login again!!",
 				HttpStatus.UNAUTHORIZED);
 	}
+	
+	@Transactional
+	@Modifying
+	public boolean revokeRefreshToken() {
+		UserInfo userInfo = userPrinciple.getUserInfo();
+		int deleteByUserInfo = refreshTokenRepository.deleteByUserInfo(userInfo);
+		if(deleteByUserInfo<=0) {
+			throw new RefreshTokenExceptionHandler("Unable to logout user!!", HttpStatus.BAD_REQUEST);
+		}
+		return true;
+	}
+	
+	
+	
 
 	private SecretKey getKey() {
 		byte[] keyBytes = Decoders.BASE64.decode(refreshSecretkey);
@@ -113,7 +132,7 @@ public class RefreshTokenService {
 		return Jwts.parser().verifyWith(getKey()).build().parseSignedClaims(token).getPayload();
 	}
 
-	public boolean validateRefreshToken(String token, UserDetails userDetails) {
+	public boolean validateRefreshToken(String token, UserInfo userDetails) {
 		final String userName = extractUserName(token);
 		return (userName.equals(userDetails.getUsername()) && !isTokenExpired(token) && isRefreshToken(token));
 	}

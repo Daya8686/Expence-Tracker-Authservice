@@ -23,7 +23,7 @@ public interface UserInfoRepository extends JpaRepository<UserInfo, UUID>{
 
 	public boolean existsByUsernameOrEmailOrMobileNo(String username, String email, String mobileNo);
 
-	@Query("SELECT u.username FROM UserInfo u WHERE u.username = :input OR u.email = :input")
-	public Optional<String> findByUsernameOrEmail(@Param("input") String input);
+	@Query("SELECT u FROM UserInfo u WHERE u.username = :input OR u.email = :input")
+	public Optional<UserInfo> findByUsernameOrEmail(@Param("input") String input);
 
 }

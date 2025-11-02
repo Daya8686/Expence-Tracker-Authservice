@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -36,6 +37,9 @@ public class JWTFilter extends OncePerRequestFilter {
 	
 	@Autowired
 	private ObjectMapper objectMapper;
+	
+	@Autowired
+	private UserDetailsService userDetailsService;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -50,7 +54,7 @@ public class JWTFilter extends OncePerRequestFilter {
 			username=jwtService.extractUserName(token);
 			
 			if(username!=null && SecurityContextHolder.getContext().getAuthentication()==null) {
-				UserDetails userByUsername = applicationContext.getBean(UserDetailsServiceImpl.class).loadUserByUsername(username);
+				UserDetails userByUsername = userDetailsService.loadUserByUsername(username);
 				if(jwtService.validateToken(token, userByUsername)) {
 					UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
 	                        userByUsername, null, userByUsername.getAuthorities());
@@ -72,6 +76,7 @@ public class JWTFilter extends OncePerRequestFilter {
             return; // Prevent further processing of the filter chain
         } catch (Exception e) {
             // Handle other JWT-related exceptions
+        	e.printStackTrace();
             handleException(response, "Invalid token. Please log in again.", HttpStatus.UNAUTHORIZED);
             return; // Prevent further processing of the filter chain
         }

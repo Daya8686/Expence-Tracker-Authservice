@@ -22,10 +22,14 @@ public class CustomUserDetails implements UserDetails {
 	public CustomUserDetails(UserInfo userInfo) {
 		this.username= userInfo.getUsername();
 		this.password=userInfo.getPassword();
+		if(userInfo.getRoles()==null) {
+			this.authorities=Set.of();
+		}
+		else {
 		this.authorities=userInfo.getRoles().stream()
 				.map(role -> new SimpleGrantedAuthority(role.getUserRole().toUpperCase()))
 				.collect(Collectors.toSet());
-				
+		}	
 	}
 	
 	@Override

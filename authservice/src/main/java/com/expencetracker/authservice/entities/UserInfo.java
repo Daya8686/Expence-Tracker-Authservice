@@ -9,6 +9,7 @@ import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -18,6 +19,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
@@ -61,6 +63,9 @@ public class UserInfo {
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<UserRoles> roles = new HashSet<>();
+	
+	@OneToOne(mappedBy ="userInfo", cascade = CascadeType.ALL )
+	private RefreshToken refreshToken;
 	
 	@CreationTimestamp
 	@Column(name = "created_at", updatable = false)
@@ -167,6 +172,14 @@ public class UserInfo {
 			return false;
 		UserInfo other = (UserInfo) obj;
 		return Objects.equals(userId, other.userId);
+	}
+
+	public RefreshToken getRefreshToken() {
+		return refreshToken;
+	}
+
+	public void setRefreshToken(RefreshToken refreshToken) {
+		this.refreshToken = refreshToken;
 	}
 	
 	
